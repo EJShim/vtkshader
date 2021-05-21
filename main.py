@@ -20,11 +20,10 @@ sphereActor = None
 actor = None
 shaderProperty = None
 
-# #Light
-# light = vtk.vtkLight()
-# light.SetFocalPoint( 0, 0, 0)
-# light.SetPosition(10, 0, 0)
-# light.SetConeAngle(1)
+picker = vtk.vtkCellPicker()
+picker.SetTolerance(0.000001)
+picker.PickFromListOn()
+
 
 def onMouseMove(interactor, b):
     
@@ -33,8 +32,7 @@ def onMouseMove(interactor, b):
     pos = interactor.GetInteractor().GetEventPosition()
     
     
-    picker = vtk.vtkCellPicker()
-    picker.SetTolerance(0.001)
+    
     
     picker.Pick(pos[0], pos[1], 0.0, ren)
 
@@ -57,12 +55,16 @@ with open( "fragment.glsl", 'r') as shaderFile:
     fragmentShaderText = shaderFile.read()
 
 def MakeActor(polydata):
-    mapper = vtk.vtkPolyDataMapper()
+    mapper = vtk.vtkOpenGLPolyDataMapper()
     mapper.SetInputData(polydata)
+
+    print(mapper.SetVBOShiftScaleMethod(0))
+
 
 
     actor = vtk.vtkOpenGLActor()
     actor.SetMapper(mapper)
+    picker.AddPickList(actor)
 
 
     return actor
@@ -73,11 +75,11 @@ if __name__ == "__main__":
     sphereSource.Update()
     sphereActor = MakeActor(sphereSource.GetOutput())
     sphereActor.GetProperty().SetColor(1, 0, 0)
-    ren.AddActor(sphereActor)
+    # ren.AddActor(sphereActor)
 
     #Read Sample Data
     reader = vtk.vtkSTLReader()
-    reader.SetFileName("mn.stl")
+    reader.SetFileName("mx.stl")
     reader.Update()
 
     polydata = reader.GetOutput()

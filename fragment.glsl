@@ -103,12 +103,13 @@ void main()
   //   diffuse = vertexPosition;
   // }
 
-  // if(intensity > 0.8){
-  //   ambientColor = vec3(1.0, 0.0, 0.0);
+  if(intensity < 5.0){
+    ambientColor = vec3(1.0, 0.0, 0.0);
+  }
 
-  // }
 
-  
+  // diffuse = pickedVCoutput;
+  // diffuse = vec3(intensity, intensity, intensity);
   
   fragOutput0 = vec4(ambientColor + diffuse, opacity);  //VTK::Light::Impl
   //  fragOutput0 = vec4(vertexPosition, opacity);
