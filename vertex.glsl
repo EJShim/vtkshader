@@ -67,11 +67,11 @@ void main()
 
   
   pickedVCoutput = vertexMC.xyz;
-  intensity = length( (MCVCMatrix  * vec4(vertexMC.xyz, 1.0)).xyz - (MCVCMatrix  * vec4(pickedUniform, 1.0)).xyz);
+  intensity = length( vertexMC.xyz - pickedUniform);
 
   vec4 fun = vec4(0.0, 0.0, 0.0, 0.0);
   if(intensity < 5.0){
-    fun = 21.0 *  vec4(normalMC.xyz, 0.0);
+    fun = intensity *  vec4(normalMC.xyz, 0.0);
   }
 
   // vec3 vertexVC = vertexMC.xyz;

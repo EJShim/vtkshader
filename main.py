@@ -58,7 +58,8 @@ def MakeActor(polydata):
     mapper = vtk.vtkOpenGLPolyDataMapper()
     mapper.SetInputData(polydata)
 
-    print(mapper.SetVBOShiftScaleMethod(0))
+    #Disable VBO shfit and scale
+    mapper.SetVBOShiftScaleMethod(0)
 
 
 
