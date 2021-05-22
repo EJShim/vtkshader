@@ -70,12 +70,9 @@ void main()
   intensity = length( vertexMC.xyz - pickedUniform);
 
   vec4 fun = vec4(0.0, 0.0, 0.0, 0.0);
-  if(intensity < 5.0){
-    fun = intensity *  vec4(normalMC.xyz, 0.0);
-  }
-
-  // vec3 vertexVC = vertexMC.xyz;
+  fun = max(0.0, 15 - intensity) *  vec4(normalMC.xyz, 0.0);
+  
 
   vec4 tmpPos =  MCDCMatrix  * vec4(vertexMC.xyz, 1.0);
-  gl_Position = tmpPos;
+  gl_Position = tmpPos + fun;
 }
