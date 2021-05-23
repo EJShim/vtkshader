@@ -1,0 +1,109 @@
+<html>
+  <head> </head>
+
+  <body>    
+    <script type="text/javascript" src="https://unpkg.com/@babel/polyfill@7.0.0/dist/polyfill.js"></script>
+    <script type="text/javascript" src="https://unpkg.com/vtk.js"></script>
+    <script src="https://unpkg.com/axios/dist/axios.min.js"></script>
+
+
+
+    <script>
+
+      
+      let polydata = null;
+      let m_renderer = null;
+      let m_renderWindow = null
+
+      vertexShaderText = null;
+      fragmentShaderText = null;
+      
+      function MakeActor( polydata ){
+
+
+        // const test = vtk.Rendering.OpenGL.vtkPolyDataMapper.newInstance();
+        // console.log(test);
+        //Slice Mapper
+        const mapper = vtk.Rendering.Core.vtkMapper.newInstance();
+        mapper.setInputData(polydata);  
+        
+        
+        //Add Shader
+        const mapperSpecificProp = mapper.getViewSpecificProperties();
+        mapperSpecificProp.OpenGL = {
+            ShaderReplacements: [],
+            VertexShaderCode: vertexShaderText,
+            FragmentShaderCode:fragmentShaderText,
+            GeometryShaderCode: ''
+        };       
+
+        mapperSpecificProp.ShaderCallbacks = [];
+        mapperSpecificProp.ShaderCallbacks.push({          
+          callback: function(userData, cellBO, ren, actor) {
+            console.log("Shader Callback");
+            const program = cellBO.getProgram();
+            // program.setUniformi(...);
+          }
+        });
+        
+
+
+        
+        //Slcie Actor
+        const actor = vtk.Rendering.Core.vtkActor.newInstance();
+        actor.setMapper(mapper);
+
+        console.log(actor.getMapper());
+        console.log(actor.getProperty());
+        // actor.getProperty().addShaderVariable();
+        // console.log(actor.getMapper().getCustomShaderAttributes());
+
+        return actor;
+      }
+
+
+
+
+      async function Start(){
+
+
+        let shaderReq = await axios.get("/vs.glsl");
+        vertexShaderText = shaderReq.data;
+        shaderReq = await axios.get("/fs.glsl");
+        fragmentShaderText = shaderReq.data
+        
+
+        //VTK Renderwindow and renderer
+        var fullScreenRenderer = vtk.Rendering.Misc.vtkFullScreenRenderWindow.newInstance();
+        m_renderer = fullScreenRenderer.getRenderer();        
+        m_renderWindow = fullScreenRenderer.getRenderWindow();
+
+
+
+        //Read Sample Image
+        let reader = vtk.IO.Geometry.vtkSTLReader.newInstance();      
+        await reader.setUrl("/mn.stl");
+        
+        //Get Read vtkPolyData
+        polydata = reader.getOutputData();        
+        const actor = MakeActor(polydata);
+        // actor.getMapper().setScalarRange(1, 17);
+        m_renderer.addActor(actor);
+
+
+        m_renderer.resetCamera();
+        m_renderWindow.render(); 
+        
+        console.log(actor.getMapper().getViewSpecificProperties());
+      
+      }
+
+
+    Start();    
+
+      
+    
+
+    </script>
+  </body>
+</html>
