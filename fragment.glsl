@@ -65,8 +65,9 @@ uniform int PrimitiveIDOffset;
 
 // surface with edges
 //VTK::Edges::Dec
-in vec3 pickedVCoutput;
+
 in float intensity;
+in vec3 normalMCOutput;
 void main()
 {
   // VC position of this fragment. This should not branch/return/discard.
@@ -106,11 +107,8 @@ void main()
   if(intensity < 5.0){
     ambientColor = vec3(1.0, 0.0, 0.0);
   }
-
-
-  // diffuse = pickedVCoutput;
-  // diffuse = vec3(intensity, intensity, intensity);
   
+  diffuse = normalMCOutput;
   fragOutput0 = vec4(ambientColor + diffuse, opacity);  //VTK::Light::Impl
   //  fragOutput0 = vec4(vertexPosition, opacity);
   if (gl_FragData[0].a <= 0.0)

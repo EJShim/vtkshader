@@ -45,8 +45,8 @@ attribute vec4 vertexMC;
 //VTK::Picking::Dec
 
 uniform vec3 pickedUniform;
-out vec3 pickedVCoutput;
 out float intensity;
+out vec3 normalMCOutput;
 void main()
 {
   //VTK::Color::Impl
@@ -66,12 +66,13 @@ void main()
   //VTK::Picking::Impl
 
   
-  pickedVCoutput = vertexMC.xyz;
+    
   intensity = length( vertexMC.xyz - pickedUniform);
 
   vec4 fun = vec4(0.0, 0.0, 0.0, 0.0);
   fun = max(0.0, 15 - intensity) *  vec4(normalMC.xyz, 0.0);
   
+  normalMCOutput = normalMatrix * normalMC;
 
   vec4 tmpPos =  MCDCMatrix  * vec4(vertexMC.xyz, 1.0);
   gl_Position = tmpPos + fun;

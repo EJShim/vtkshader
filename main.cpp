@@ -42,7 +42,7 @@ std::string vertexShaderText;
 std::string fragmentShaderText;
 
 
-//Observer Function
+//Observer Function - On Mouse Move
 void onMouseMove(vtkObject* object, unsigned long eid, void* clientdata, void *calldata){
 
     //Get Event Position
@@ -52,39 +52,40 @@ void onMouseMove(vtkObject* object, unsigned long eid, void* clientdata, void *c
     picker->Pick(pos[0], pos[1], 0.0, ren);
     double* picked = picker->GetPickPosition();
 
-    sphere->SetPosition(picked);
+    //Update Sphere Position
+    sphere->SetPosition(picked);    
 
-    float uniformPicked[3] = {float(picked[0]), float(picked[1]), float(picked[2])};
+    //Update shader Unifrom Variable
+    currentActor->GetShaderProperty()->GetVertexCustomUniforms()->SetUniform3f("pickedUniform", picked);
 
-
-    currentActor->GetShaderProperty()->GetVertexCustomUniforms()->SetUniform3f("pickedUniform", uniformPicked);
-
+    //Redraw
     renWin->Render();
 
-
+    //Enable original operation
     static_cast<vtkInteractorStyle*>(object)->OnMouseMove();
 }
 
-
-
+//Make Actor
 vtkSmartPointer<vtkActor> MakeActor(vtkSmartPointer<vtkPolyData> polydata){
 
     vtkSmartPointer<vtkOpenGLPolyDataMapper> mapper = vtkSmartPointer<vtkOpenGLPolyDataMapper>::New();
     mapper->SetInputData(polydata);
+
+    // Disable Shift Scale
     mapper->SetVBOShiftScaleMethod(0);
 
-    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();    
-    vtkSmartPointer<vtkShaderProperty> shaderProp = actor->GetShaderProperty();
+    vtkSmartPointer<vtkActor> actor = vtkSmartPointer<vtkActor>::New();        
     actor->SetMapper(mapper);
     return actor;
 }
 
 int main(){
 
-    //Read Shader Codes
+    //Read Vertex Shader Code
     std::ifstream vertexShaderFile("../vertex.glsl");
     vertexShaderText = std::string((std::istreambuf_iterator<char>(vertexShaderFile)),std::istreambuf_iterator<char>());
 
+    //Fragment Shader
     std::ifstream fragmentShaderFile("../fragment.glsl");
     fragmentShaderText = std::string((std::istreambuf_iterator<char>(fragmentShaderFile)),std::istreambuf_iterator<char>());
 
@@ -92,20 +93,19 @@ int main(){
     iren = vtkSmartPointer<vtkRenderWindowInteractor>::New();
     vtkSmartPointer<vtkInteractorStyleTrackballCamera> interactorStyle = vtkSmartPointer<vtkInteractorStyleTrackballCamera>::New();
     iren->SetInteractorStyle(interactorStyle);
-
-    //Add Observer
-    vtkSmartPointer<vtkCallbackCommand> mouseMoveCallback = vtkSmartPointer<vtkCallbackCommand>::New();
-    mouseMoveCallback->SetCallback(onMouseMove);
-    interactorStyle->AddObserver(vtkCommand::MouseMoveEvent, mouseMoveCallback );
-
     renWin = vtkSmartPointer<vtkRenderWindow>::New();
     renWin->SetSize(1000, 1000);
     iren->SetRenderWindow(renWin);
     ren = vtkSmartPointer<vtkRenderer>::New();
     renWin->AddRenderer(ren);
 
+    //Add Observer
+    vtkSmartPointer<vtkCallbackCommand> mouseMoveCallback = vtkSmartPointer<vtkCallbackCommand>::New();
+    mouseMoveCallback->SetCallback(onMouseMove);
+    interactorStyle->AddObserver(vtkCommand::MouseMoveEvent, mouseMoveCallback );
 
-    //Initialize Pickewr
+    
+    //Initialize Picker
     picker = vtkSmartPointer<vtkCellPicker>::New();
     picker->SetTolerance(0.000001);
     picker->PickFromListOn();
@@ -119,13 +119,13 @@ int main(){
     ren->AddActor(sphere);
 
 
-    // //read stl
+    // //read sample polydata
     vtkSmartPointer<vtkPLYReader> reader = vtkSmartPointer<vtkPLYReader>::New();
     reader->SetFileName("../bun_zipper.ply");
     reader->Update();
     vtkSmartPointer<vtkPolyData> polydata = reader->GetOutput();
 
-    //Calculate normals
+    //Calculate normals - not mandatory
     vtkSmartPointer<vtkPolyDataNormals> normalCalc = vtkSmartPointer<vtkPolyDataNormals>::New();
     normalCalc->SetInputData(polydata);
     normalCalc->NonManifoldTraversalOn();
@@ -147,6 +147,8 @@ int main(){
 
     //Make Actor
     currentActor = MakeActor(polydata);
+
+    //Add Picker Pick list
     picker->AddPickList(currentActor);
 
     //Set Shader
@@ -162,10 +164,6 @@ int main(){
     renWin->Render();
     iren->Initialize();
     iren->Start();
-
-
-
-    std::cout << "Hello" << std::endl;
 
 
     return 0;
