@@ -9,9 +9,14 @@ with open("vertex.glsl", "r") as vertexShaderFile:
     vertexShaderText = vertexShaderFile.read()
 with open( "fragment.glsl", 'r') as shaderFile:
     fragmentShaderText = shaderFile.read()
+
+
+#Indicates Picked psoition
 sphereActor = None
+
+#Target Actor
 actor = None
-shaderProperty = None
+# shaderProperty = None
 
 
 #Initialize Renderer
@@ -31,6 +36,7 @@ picker.SetTolerance(0.000001)
 picker.PickFromListOn()
 
 
+#On Mouse Move - pick position and update rendering
 def onMouseMove(interactor, b):
     #Pick a psoition  
     pos = interactor.GetInteractor().GetEventPosition()
@@ -41,7 +47,7 @@ def onMouseMove(interactor, b):
     sphereActor.SetPosition(picked)
 
     #Update Shader Property    
-    shaderProperty.GetVertexCustomUniforms().SetUniform3f("pickedUniform", [picked[0], picked[1], picked[2]])
+    actor.GetShaderProperty().GetVertexCustomUniforms().SetUniform3f("pickedUniform", [picked[0], picked[1], picked[2]])
 
     #Redraw
     renWin.Render()
@@ -52,6 +58,7 @@ def onMouseMove(interactor, b):
 interactorStyle.AddObserver("MouseMoveEvent", onMouseMove)
 
 
+#Make Actor
 def MakeActor(polydata):
     mapper = vtk.vtkOpenGLPolyDataMapper()
     mapper.SetInputData(polydata)
@@ -66,6 +73,8 @@ def MakeActor(polydata):
 
 if __name__ == "__main__":
 
+
+    #Make Sphere Actor
     sphereSource = vtk.vtkSphereSource()
     sphereSource.Update()
     sphereActor = MakeActor(sphereSource.GetOutput())
@@ -77,12 +86,12 @@ if __name__ == "__main__":
     reader.SetFileName("bun_zipper.ply")
     reader.Update()
 
+    #Target Polydaat
     polydata = reader.GetOutput()
     
 
-
-    normalCalc = vtk.vtkPolyDataNormals()
-    # normalCalc.SetInputData(result)
+    #Calculate Normal - not manadatory
+    normalCalc = vtk.vtkPolyDataNormals()    
     normalCalc.SetInputData(polydata)
     normalCalc.NonManifoldTraversalOn()
     normalCalc.SplittingOff()
@@ -92,7 +101,7 @@ if __name__ == "__main__":
     normalCalc.Update()
     polydata = normalCalc.GetOutput()
 
-
+    #Scale up 500
     transform = vtk.vtkTransform()
     transform.Scale(500, 500, 500)
     transformFilter = vtk.vtkTransformPolyDataFilter()
@@ -102,11 +111,14 @@ if __name__ == "__main__":
 
     polydata = transformFilter.GetOutput()
 
-
+    #Make Target Actor
     actor = MakeActor(polydata)
-    actor.GetProperty().SetColor(0.5, 0.5, 0.0)    
+    actor.GetProperty().SetColor(0.5, 0.5, 0.0)
+
+    #Add Pick List
     picker.AddPickList(actor)
 
+    #Initialize Uniform Variable
     shaderProperty = actor.GetShaderProperty()
     shaderProperty.SetVertexShaderCode(vertexShaderText)
     shaderProperty.SetFragmentShaderCode(fragmentShaderText)
